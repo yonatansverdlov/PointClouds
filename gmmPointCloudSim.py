@@ -1,5 +1,4 @@
 
-
 import torch as torch
 import numpy as np
 from scipy.stats import ortho_group
@@ -155,5 +154,3 @@ def genGmmPC(dom,nSamples,weights,rng = None,minSig = 0.1):
 # plt.scatter(pc[:,0], pc[:,1])
 # plt.scatter(noisyPT[:,0], noisyPT[:,1])
 # plt.show()
-
-
