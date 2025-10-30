@@ -1,7 +1,6 @@
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import utils.EGNN as eg
@@ -110,9 +109,6 @@ def permVec2Mat(perm,device):
     P = eye[perm].contiguous()  # (n, n)
     return (P/n).detach() #keops.LazyTensor(P,axis= 0)# P.view(n, 1, n, 1)
 
-import torch
-from torch.utils.data import DataLoader
-
 def evaluate_model(model, test_loader,edges, edge_attr, device,sinkhorn_eps=0.01,nIter = 100):
     """
     Run model on test data and compute average accuracy.
@@ -154,7 +150,6 @@ def evaluate_model(model, test_loader,edges, edge_attr, device,sinkhorn_eps=0.01
 
     accuracy = total_correct / total_points
     return accuracy
-
 
 def test(model, config):
     # === load model === 
@@ -203,7 +198,7 @@ if __name__ == "__main__":
         'sinkhorn_eps_start' : 0.2,
         'sinkhorn_eps_end' : 0.05,
         'device': 'cuda',
-        'nEpochs': 2,
+        'nEpochs': 10,
         'lr' : 5e-3, # learning rate 
         'factor' : 0.7,
         'dataConfig' : dataConfig

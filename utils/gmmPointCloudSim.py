@@ -2,7 +2,6 @@
 import torch as torch
 import numpy as np
 from scipy.stats import ortho_group
-from matplotlib import pyplot as plt
 from math import cos, sin
 
 # Class for perturbing point clouds

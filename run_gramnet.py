@@ -1,22 +1,15 @@
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import utils.EGNN as eg
-from gmmPointCloudSim import genGmmPC
-from sinkhorn_pointcloud import sinkhorn_loss
+from utils.gmmPointCloudSim import genGmmPC
+from utils.sinkhorn_pointcloud import sinkhorn_loss
 import time
-import logging
 from utils.GramNet import BiLipGram
+import argparse
 
-logging.basicConfig(
-    filename='egnnSinkhorn.log',
-    filemode='w',  # or 'a' to append
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 
 # === Dataset ===
 class PointCloudMatchingDataset(Dataset):
@@ -118,8 +111,6 @@ def permVec2Mat(perm,device):
     P = eye[perm].contiguous()  # (n, n)
     return (P/n).detach() #keops.LazyTensor(P,axis= 0)# P.view(n, 1, n, 1)
 
-import torch
-from torch.utils.data import DataLoader
 
 def evaluate_model(model, test_loader,edges, edge_attr, device,sinkhorn_eps=0.01,nIter = 100):
     """
@@ -187,7 +178,8 @@ def test(model, config):
     print(f"Test accuracy is: {acc:.4f}")
     
 if __name__ == "__main__":
-
+    parser = argparse.ArgumentParser(description="Train graph models on specified datasets.")
+    parser.add_argument('--noise_level', type=float, default=0.0, help='Dataset to use for training.')
     # === Config ===
     dataConfig = {
         'n_points' : 90, # number of points in each point cloud
@@ -195,9 +187,8 @@ if __name__ == "__main__":
         'n_test_ratio' : 1.0, # test set will have n_test_ratio*n_train samples
         'nFactors' : 3, # Number of components in each Gaussian mixture point cloud
         'dom' : [[-1,1],[-1,1]],
-        'maxPerturb' :  0.1 # Maximal pointwise perturbation
     }
-
+    dataConfig['maxPerturb']= parser.parse_args().noise_level
     config = {
         'model_type': 'EGNN+Sinkhorn',
         'hidden_nf': 64,
@@ -304,7 +295,6 @@ if __name__ == "__main__":
 
         typ = torch.exp(torch.tensor(-total_loss/n_batch))
         print(f"Epoch {epoch+1}/{n_epochs} | Loss: {total_loss/batch_size:.4f} | Typical P: {typ}")
-        logging.info(f"Epoch {epoch+1}/{n_epochs} | Loss: {total_loss/n_batch:.4f} | Typical P: {typ}")
         scheduler.step(total_loss/batch_size)
 
     end_time = time.time()
