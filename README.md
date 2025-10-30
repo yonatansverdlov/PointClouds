@@ -28,10 +28,11 @@ conda activate pointclouds
 ## Run EGNN and GramNet experiments
 
 # Choose noise_level 
-
+```bash
 ## 1) Run EGNN experiment with 5% noise
 python run_egnn.py --noise_level noise_level
-
+```
+```bash
 ## 2) Run GramNet experiment with 5% noise
 python run_gramnet.py --noise_level noise_level
-
+```
