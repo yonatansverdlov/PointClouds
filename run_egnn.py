@@ -4,19 +4,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-import EGNN as eg
-from gmmPointCloudSim import genGmmPC
-from sinkhorn_pointcloud import sinkhorn_loss
+import utils.EGNN as eg
+from utils.gmmPointCloudSim import genGmmPC
+from utils.sinkhorn_pointcloud import sinkhorn_loss
 import time
-import logging
-from GramNet import BiLipGram
-
-logging.basicConfig(
-    filename='egnnSinkhorn.log',
-    filemode='w',  # or 'a' to append
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+import argparse
 
 # === Dataset ===
 class PointCloudMatchingDataset(Dataset):
@@ -144,8 +136,8 @@ def evaluate_model(model, test_loader,edges, edge_attr, device,sinkhorn_eps=0.01
             h_X = torch.ones((n_points, 1), device=device)
             h_Y = torch.ones((n_points, 1), device=device)
             # Forward pass: model outputs [N, N] soft permutation matrix
-            z_X = model( X.squeeze())
-            z_Y = model(Y.squeeze())
+            z_X,_ = model(h_X, X.squeeze(), edges,edge_attr)
+            z_Y,_ = model(h_Y, Y.squeeze(), edges,edge_attr)
             P,_ = sinkhorn_loss(z_X, z_Y, sinkhorn_eps, n_points, nIter,device = device) # shape: [batch_size, N, N] or [N, N]
 
             # If batch size is 1, squeeze
@@ -175,7 +167,7 @@ def test(model, config):
     maxPerturb = config['dataConfig']['maxPerturb']
     nFactors = config['dataConfig']['nFactors']
     # === Test data ===
-    test_dataset_size = int(n_samples*0.25)
+    test_dataset_size = int(n_samples)
     test_dataset = PointCloudMatchingDataset(dom,n_samples = test_dataset_size,nPts = n_points,perturb=(k,maxPerturb),nFactors = nFactors, device=device)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
@@ -186,18 +178,20 @@ def test(model, config):
     acc = evaluate_model(model, test_loader,edges, edge_attr, device)
     print(f"Test accuracy is: {acc:.4f}")
     
-if __name__ == "__main__":
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Train graph models on specified datasets.")
+    parser.add_argument('--noise_level', type=float, default=0.0, help='Dataset to use for training.')
     # === Config ===
     dataConfig = {
         'n_points' : 90, # number of points in each point cloud
-        'n_train' : 128,# number of samples in traning set
-        'n_test_ratio' : 0.25, # test set will have n_test_ratio*n_train samples
+        'n_train' : 1000,# number of samples in traning set
+        'n_test_ratio' : 1.0, # test set will have n_test_ratio*n_train samples
         'nFactors' : 3, # Number of components in each Gaussian mixture point cloud
         'dom' : [[-1,1],[-1,1]],
-        'maxPerturb' :  0.0 # Maximal pointwise perturbation
     }
-
+    dataConfig['maxPerturb']= parser.parse_args().noise_level
     config = {
         'model_type': 'EGNN+Sinkhorn',
         'hidden_nf': 64,
@@ -209,7 +203,7 @@ if __name__ == "__main__":
         'sinkhorn_eps_start' : 0.2,
         'sinkhorn_eps_end' : 0.05,
         'device': 'cuda',
-        'nEpochs': 20,
+        'nEpochs': 2,
         'lr' : 5e-3, # learning rate 
         'factor' : 0.7,
         'dataConfig' : dataConfig
@@ -306,7 +300,6 @@ if __name__ == "__main__":
 
         typ = torch.exp(torch.tensor(-total_loss/n_batch))
         print(f"Epoch {epoch+1}/{n_epochs} | Loss: {total_loss/batch_size:.4f} | Typical P: {typ}")
-        logging.info(f"Epoch {epoch+1}/{n_epochs} | Loss: {total_loss/n_batch:.4f} | Typical P: {typ}")
         scheduler.step(total_loss/batch_size)
 
     end_time = time.time()

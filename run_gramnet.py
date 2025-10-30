@@ -4,12 +4,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-import EGNN as eg
+import utils.EGNN as eg
 from gmmPointCloudSim import genGmmPC
 from sinkhorn_pointcloud import sinkhorn_loss
 import time
 import logging
-from GramNet import BiLipGram
+from utils.GramNet import BiLipGram
 
 logging.basicConfig(
     filename='egnnSinkhorn.log',
@@ -175,7 +175,7 @@ def test(model, config):
     maxPerturb = config['dataConfig']['maxPerturb']
     nFactors = config['dataConfig']['nFactors']
     # === Test data ===
-    test_dataset_size = int(n_samples*0.25)
+    test_dataset_size = int(n_samples)
     test_dataset = PointCloudMatchingDataset(dom,n_samples = test_dataset_size,nPts = n_points,perturb=(k,maxPerturb),nFactors = nFactors, device=device)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
@@ -191,11 +191,11 @@ if __name__ == "__main__":
     # === Config ===
     dataConfig = {
         'n_points' : 90, # number of points in each point cloud
-        'n_train' : 128,# number of samples in traning set
-        'n_test_ratio' : 0.25, # test set will have n_test_ratio*n_train samples
+        'n_train' : 1000,# number of samples in traning set
+        'n_test_ratio' : 1.0, # test set will have n_test_ratio*n_train samples
         'nFactors' : 3, # Number of components in each Gaussian mixture point cloud
         'dom' : [[-1,1],[-1,1]],
-        'maxPerturb' :  0.0 # Maximal pointwise perturbation
+        'maxPerturb' :  0.1 # Maximal pointwise perturbation
     }
 
     config = {
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         'sinkhorn_eps_start' : 0.2,
         'sinkhorn_eps_end' : 0.05,
         'device': 'cuda',
-        'nEpochs': 20,
+        'nEpochs': 10,
         'lr' : 5e-3, # learning rate 
         'factor' : 0.7,
         'dataConfig' : dataConfig
