@@ -23,7 +23,7 @@ git clone https://github.com/yonatansverdlov/PointClouds.git
 cd PointClouds
 conda env create -f env.yaml
 conda activate pointclouds
-```
+
 # ==========================================
 # Run EGNN and GramNet experiments
 # ==========================================
