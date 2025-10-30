@@ -23,16 +23,15 @@ git clone https://github.com/yonatansverdlov/PointClouds.git
 cd PointClouds
 conda env create -f env.yaml
 conda activate pointclouds
+```
 
-# ==========================================
-# Run EGNN and GramNet experiments
-# ==========================================
+## Run EGNN and GramNet experiments
 
 # Choose noise_level 
 
-# 1) Run EGNN experiment with 5% noise
+## 1) Run EGNN experiment with 5% noise
 python run_egnn.py --noise_level noise_level
 
-# 2) Run GramNet experiment with 5% noise
+## 2) Run GramNet experiment with 5% noise
 python run_gramnet.py --noise_level noise_level
 
